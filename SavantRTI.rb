@@ -14,6 +14,7 @@ def connThread(rti)
     loop do
       begin
         data = rti.gets("\r").chomp
+        data.gsub!(/\0/, '')
       rescue
         break
       end
