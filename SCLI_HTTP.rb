@@ -27,7 +27,7 @@ def connThread(rti)
         break
       end
       break unless data 
-      if /(readstate|writestate|servicerequest|userzones|statenames|settrigger) /.match(data)
+      if /(readstate|writestate|servicerequest|userzones|statenames|settrigger)/.match(data)
         r = `#{$SCLI + data}`
         rti.write "HTTP/1.1 200 OK\r\n" +
                "Content-Type: text/plain\r\n" +
