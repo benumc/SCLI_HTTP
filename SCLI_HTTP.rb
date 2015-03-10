@@ -34,6 +34,7 @@ def connThread(rti)
                "Content-Length: #{r.length}\r\n" +
                "Connection: close\r\n\r\n" if rType == 'http'
         rti.write(r)
+        break if rType == 'http'
       else
         puts "Format incorect!: #{data.inspect}"
         break
