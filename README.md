@@ -5,6 +5,13 @@ Can be run on smart or pro host.
 
 Allows direct TCP or HTTP communication with sclibrige on port 12000.
 
+All of the commands below should work via standard tcp connection by removing the ```http://<address of host>:12000/``` portion.
+
+To test the tcp portion, you can open a terminal window and connect directly using ```telnet <host ip> 12000```
+Commands will run when you hit the return key.
+
+If you are conecting from a 3rd party control system, make sure to terminate each command with ```\r\n``` or equivalent depending on system (0x0D 0x0A).
+
 The easiest way to test is in a browser with commands like:
 
 ```http://<address of host>:12000/readstate%20global.CurrentMonth```
