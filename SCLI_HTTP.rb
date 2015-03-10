@@ -15,7 +15,7 @@ def connThread(rti)
     loop do
       rType = 'tcp'
       begin
-        data = rti.gets("\r")
+        data = rti.gets("\n")
         if data.include? "HTTP"
           rti.gets("\r\n\r\n")
           /GET \/([^ ]+) HTTP/.match(data)
@@ -23,10 +23,10 @@ def connThread(rti)
           rType = 'http'
         end
         data.gsub!(/\0/, '')
+        data.gsub!("\r",'')
       rescue
         break
       end
-      break unless data 
       if /(readstate|writestate|servicerequest|userzones|statenames|settrigger)/.match(data)
         r = `#{$SCLI + data}`
         rti.write "HTTP/1.1 200 OK\r\n" +
