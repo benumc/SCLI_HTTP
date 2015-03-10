@@ -1,4 +1,4 @@
-# SavantRTI
+# SCLI_HTTP
 Network bridge between RTI and Savant.
 
 Can be run on smart or pro host.
