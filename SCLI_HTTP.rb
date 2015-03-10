@@ -13,28 +13,37 @@ Thread.abort_on_exception=true
 
 def connThread(rti)
     loop do
+      rType = 'tcp'
       begin
-        request = /GET \/([^ ]+) HTTP/.match(rti.gets("\r\n\r\n"))
-        data = URI.unescape($1)
+        data = rti.gets("\r")
+        if data.include? "HTTP"
+          rti.gets("\r\n\r\n")
+          /GET \/([^ ]+) HTTP/.match(data)
+          data = URI.unescape($1)
+          rType = 'http'
+        end
+        data.gsub!(/\0/, '')
       rescue
         break
       end
-      unless data
-        break
-      end
-      if data.length > 10
+      break unless data 
+      if /(readstate|writestate|servicerequest|userzones|statenames|settrigger) /.match(data)
         r = `#{$SCLI + data}`
         rti.write "HTTP/1.1 200 OK\r\n" +
                "Content-Type: text/plain\r\n" +
                "Content-Length: #{r.length}\r\n" +
-               "Connection: close\r\n\r\n"+r
+               "Connection: close\r\n\r\n" if rType == 'http'
+        rti.write(r)
+      else
+        puts "Format incorect!: #{data.inspect}"
+        break
       end
     end
     rti.close
 end
 
 Thread.abort_on_exception = true
-server = TCPServer.open(12001)
+server = TCPServer.open(12000)
 loop do
   Thread.start(server.accept) { |rti| connThread(rti) }
 end
