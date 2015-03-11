@@ -33,11 +33,14 @@ def connThread(rti,sav)
              sav.write(data.gsub("servicerequestcommand ","").gsub("\n","\r"))
              r ="\n"
           end 
-          rti.write "HTTP/1.1 200 OK\r\n" +
-                 "Content-Type: text/plain\r\n" +
-                 "Content-Length: #{r.length}\r\n" +
-                 "Connection: close\r\n\r\n"
-          rti.write(r)
+          begin
+            rti.write "HTTP/1.1 200 OK\r\n" +
+               "Content-Type: text/plain\r\n" +
+               "Content-Length: #{r.length}\r\n" +
+               "Connection: close\r\n\r\n"
+          rescue
+            puts "connection closed, can't send reply"
+          end
         else
           t = Thread.new do
             d = data
@@ -46,8 +49,12 @@ def connThread(rti,sav)
             else
                sav.write(d.gsub("servicerequestcommand ","").gsub("\n","\r"))
                r ="\n"
-            end 
-            rti.write(r)
+            end
+            begin
+              rti.write(r)
+            rescue
+              puts "connection closed, can't send reply"
+            end
           end
         end
         break if rType == 'http'
