@@ -9,7 +9,7 @@ if a.include? "linux"
  $SCLI = "/usr/local/bin/sclibridge "
 end
 
-def connThread(rti,sav)
+def connThread(rti)
     loop do
       rType = 'tcp'
       begin
@@ -30,7 +30,7 @@ def connThread(rti,sav)
           if $1 == "servicerequestcommand"
             r = `#{$SCLI + data}`
           else
-             sav.write(data.gsub("servicerequestcommand ","").gsub("\n","\r"))
+             $sav.write(data.gsub("servicerequestcommand ","").gsub("\n","\r"))
              r ="\n"
           end 
           begin
@@ -47,7 +47,11 @@ def connThread(rti,sav)
             if $1 == "servicerequestcommand"
               r = `#{$SCLI + d}`
             else
-               sav.write(d.gsub("servicerequestcommand ","").gsub("\n","\r"))
+              begin
+                $sav.write(d.gsub("servicerequestcommand ","").gsub("\n","\r"))
+              rescue
+                r = `#{$SCLI + d}`
+              end
                r ="\n"
             end
             begin
@@ -69,7 +73,12 @@ end
 Thread.abort_on_exception = true
 server = TCPServer.open(12000)
 savant = TCPServer.open(12001)
+
+savSock = Thread.new do
+  $sav = savant.accept
+  sleep(1)
+end
+
 loop do
-  sav = savant.accept
-  Thread.start(server.accept) { |rti| connThread(rti,sav) }
+  Thread.start(server.accept) { |rti| connThread(rti) }
 end
