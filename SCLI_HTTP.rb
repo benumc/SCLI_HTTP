@@ -10,7 +10,6 @@ if a.include? "linux"
 end
 
 def connThread(rti,sav)
-  puts "open"
     loop do
       rType = 'tcp'
       begin
