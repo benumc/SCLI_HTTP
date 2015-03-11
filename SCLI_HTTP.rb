@@ -9,9 +9,8 @@ if a.include? "linux"
  $SCLI = "/usr/local/bin/sclibridge "
 end
 
-Thread.abort_on_exception=true
-
-def connThread(rti)
+def connThread(rti,sav)
+  puts "open"
     loop do
       rType = 'tcp'
       begin
@@ -29,19 +28,27 @@ def connThread(rti)
       end
       if /(readstate|writestate|servicerequest|userzones|statenames|settrigger)/.match(data)
         if rType == 'http'
-          r = `#{$SCLI + data}`
+          if $1 == "servicerequestcommand"
+            r = `#{$SCLI + data}`
+          else
+             sav.write(data.gsub("servicerequestcommand ","").gsub("\n","\r"))
+             r ="\n"
+          end 
           rti.write "HTTP/1.1 200 OK\r\n" +
                  "Content-Type: text/plain\r\n" +
                  "Content-Length: #{r.length}\r\n" +
                  "Connection: close\r\n\r\n"
           rti.write(r)
         else
-          puts Thread.list.count
           t = Thread.new do
-            r = `#{$SCLI + data}`
+            d = data
+            if $1 == "servicerequestcommand"
+              r = `#{$SCLI + d}`
+            else
+               sav.write(d.gsub("servicerequestcommand ","").gsub("\n","\r"))
+               r ="\n"
+            end 
             rti.write(r)
-            
-          #puts Thread.list.count
           end
         end
         break if rType == 'http'
@@ -55,6 +62,8 @@ end
 
 Thread.abort_on_exception = true
 server = TCPServer.open(12000)
+savant = TCPServer.open(12001)
 loop do
-  Thread.start(server.accept) { |rti| connThread(rti) }
+  sav = savant.accept
+  Thread.start(server.accept) { |rti| connThread(rti,sav) }
 end
