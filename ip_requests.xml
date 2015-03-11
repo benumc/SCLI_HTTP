@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="racepoint_component_profile.xsd" manufacturer="IP" model="Requests" device_class="Remote_control" minimum_component_engine_version="0" rpm_xml_version="2.2">
+    <notes>
+        ====================== Change Log ==================
+        Version: 2.2 Change: Added TCP Support.  Risk: Low Importance: Forced
+        Version: 1.2 Change: Version Number bump to support new Savant Revisioning Scheme.  Risk: Low Importance: Forced
+    </notes>
+    <component_properties>
+        <listen_for_third_party_service_requests>true</listen_for_third_party_service_requests>
+    </component_properties>
+    <control_interfaces preferred="ip" control_optional="false">
+        <ip port="12001" response_time_length_ms="10" protocol="tcp">
+            <receive_end_condition test_condition="data" type="hex">0D</receive_end_condition>
+        </ip>
+    </control_interfaces>
+    <media_interfaces>
+        <data name_on_component="Data">
+            <combined_media>
+                <data_media type="ethernet"/>
+                <control port="12001"/>
+            </combined_media>
+        </data>
+    </media_interfaces>
+    <logical_component logical_component_name="Remote_control">
+        <implementation></implementation>
+    </logical_component>
+</component>
