@@ -28,16 +28,26 @@ def connThread(rti)
         break
       end
       if /(readstate|writestate|servicerequest|userzones|statenames|settrigger)/.match(data)
-        r = `#{$SCLI + data}`
-        rti.write "HTTP/1.1 200 OK\r\n" +
-               "Content-Type: text/plain\r\n" +
-               "Content-Length: #{r.length}\r\n" +
-               "Connection: close\r\n\r\n" if rType == 'http'
-        rti.write(r)
+        if rType == 'http'
+          r = `#{$SCLI + data}`
+          rti.write "HTTP/1.1 200 OK\r\n" +
+                 "Content-Type: text/plain\r\n" +
+                 "Content-Length: #{r.length}\r\n" +
+                 "Connection: close\r\n\r\n"
+          rti.write(r)
+        else
+          puts Thread.list.count
+          t = Thread.new do
+            r = `#{$SCLI + data}`
+            rti.write(r)
+            
+          #puts Thread.list.count
+          end
+        end
         break if rType == 'http'
       else
         puts "Format incorect!: #{data.inspect}"
-        break
+        
       end
     end
     rti.close
