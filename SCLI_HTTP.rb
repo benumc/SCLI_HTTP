@@ -9,62 +9,66 @@ if a.include? "linux"
  $SCLI = "/usr/local/bin/sclibridge "
 end
 
+def readFromRemote(rti)
+  rType = 'tcp'
+  data = rti.gets("\n")
+  if data.include? "HTTP"
+    rti.gets("\r\n\r\n")
+    /GET \/([^ ]+) HTTP/.match(data)
+    data = URI.unescape($1)
+    rType = 'http'
+  end
+  data.gsub!(/\0/, '')
+  data.gsub!("\r",'')
+  return data,rType
+end
+
+def writeToRequest(data)
+  data.gsub!("servicerequestcommand ","")
+  data.gsub!("\n","\r")
+  
+  begin
+    $sav.write(data)
+    return $sav.gets("\r").gsub("\r","\n")
+  rescue
+    puts "make sure ip request profile is setup properly"
+  end
+end
+
+def writeToScli(data)
+  return `#{$SCLI + data}`
+end
+
+
 def connThread(rti)
     loop do
-      rType = 'tcp'
       begin
-        data = rti.gets("\n")
-        if data.include? "HTTP"
-          rti.gets("\r\n\r\n")
-          /GET \/([^ ]+) HTTP/.match(data)
-          data = URI.unescape($1)
-          rType = 'http'
-        end
-        data.gsub!(/\0/, '')
-        data.gsub!("\r",'')
+        data,rType = readFromRemote(rti)
       rescue
         break
       end
-      if /(readstate|writestate|servicerequest|userzones|statenames|settrigger)/.match(data)
-        if rType == 'http'
-          if $1 == "servicerequestcommand"
-            r = `#{$SCLI + data}`
-          else
-             $sav.write(data.gsub("servicerequestcommand ","").gsub("\n","\r"))
-             r ="\n"
-          end 
-          begin
+      puts data.inspect
+      if /(readstate|writestate|servicerequestcommand|servicerequest|userzones|statenames|settrigger)/.match(data)
+        #puts $1.inspect
+        if $1 == "servicerequestcommand"
+          r = writeToRequest(data)
+        else
+          r = writeToScli(data)
+          #puts r.inspect
+        end
+        begin
+          if rType == 'http' && r
             rti.write "HTTP/1.1 200 OK\r\n" +
                "Content-Type: text/plain\r\n" +
                "Content-Length: #{r.length}\r\n" +
-               "Connection: close\r\n\r\n"
-          rescue
-            puts "connection closed, can't send reply"
+               "Connection: close\r\n\r\n"+ r
           end
-        else
-          t = Thread.new do
-            d = data
-            if $1 == "servicerequestcommand"
-              r = `#{$SCLI + d}`
-            else
-              begin
-                $sav.write(d.gsub("servicerequestcommand ","").gsub("\n","\r"))
-              rescue
-                r = `#{$SCLI + d}`
-              end
-               r ="\n"
-            end
-            begin
-              rti.write(r)
-            rescue
-              puts "connection closed, can't send reply"
-            end
-          end
+        rescue
+          puts "connection closed, can't send reply"
         end
         break if rType == 'http'
       else
-        puts "Format incorect!: #{data.inspect}"
-        
+        puts "Format incorrect!: #{data.inspect}"
       end
     end
     rti.close
