@@ -41,39 +41,39 @@ end
 
 
 def connThread(rti)
-    loop do
-      begin
-        data,rType = readFromRemote(rti)
-      rescue
-        break
-      end
-      #puts data.inspect
-      if /(readstate|writestate|servicerequestcommand|servicerequest|userzones|statenames|settrigger)/.match(data)
-        #puts $1.inspect
-        if $1 == "servicerequestcommand"
-          r = writeToRequest(data)
-        else
-          r = writeToScli(data)
-          #puts r.inspect
-        end
-        begin
-          if rType == 'http' && r
-            rti.write "HTTP/1.1 200 OK\r\n" +
-               "Content-Type: text/plain\r\n" +
-               "Content-Length: #{r.length}\r\n" +
-               "Connection: close\r\n\r\n"+ r
-          else
-            rti.write r
-          end
-        rescue
-          puts "connection closed, can't send reply"
-        end
-        break if rType == 'http'
-      else
-        puts "Format incorrect!: #{data.inspect}"
-      end
+  loop do
+    begin
+      data,rType = readFromRemote(rti)
+    rescue
+      break
     end
-    rti.close
+    #puts data.inspect
+    if /(readstate|writestate|servicerequestcommand|servicerequest|userzones|statenames|settrigger)/.match(data)
+      #puts $1.inspect
+      if $1 == "servicerequestcommand"
+        r = writeToRequest(data)
+      else
+        r = writeToScli(data)
+        #puts r.inspect
+      end
+      begin
+        if rType == 'http' && r
+          rti.write "HTTP/1.1 200 OK\r\n" +
+             "Content-Type: text/plain\r\n" +
+             "Content-Length: #{r.length}\r\n" +
+             "Connection: close\r\n\r\n"+ r
+        else
+          rti.write r
+        end
+      rescue
+        puts "connection closed, can't send reply"
+      end
+      break if rType == 'http'
+    else
+      puts "Format incorrect!: #{data.inspect}"
+    end
+  end
+  rti.close
 end
 
 #Thread.abort_on_exception = true
