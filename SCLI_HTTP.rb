@@ -74,7 +74,7 @@ def connThread(rti)
     rti.close
 end
 
-Thread.abort_on_exception = true
+#Thread.abort_on_exception = true
 server = TCPServer.open(12000)
 savant = TCPServer.open(12001)
 
