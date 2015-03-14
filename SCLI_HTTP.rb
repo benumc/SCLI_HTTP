@@ -47,7 +47,7 @@ def connThread(rti)
       rescue
         break
       end
-      puts data.inspect
+      #puts data.inspect
       if /(readstate|writestate|servicerequestcommand|servicerequest|userzones|statenames|settrigger)/.match(data)
         #puts $1.inspect
         if $1 == "servicerequestcommand"
@@ -62,6 +62,8 @@ def connThread(rti)
                "Content-Type: text/plain\r\n" +
                "Content-Length: #{r.length}\r\n" +
                "Connection: close\r\n\r\n"+ r
+          else
+            rti.write r
           end
         rescue
           puts "connection closed, can't send reply"
