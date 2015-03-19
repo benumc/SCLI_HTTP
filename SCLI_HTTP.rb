@@ -19,19 +19,24 @@ def readFromRemote(rti)
     rType = 'http'
   end
   data.gsub!(/\0/, '')
-  data.gsub!("\r",'')
+#puts data
   return data,rType
 end
 
 def writeToRequest(data)
   data.gsub!("servicerequestcommand ","")
   data.gsub!("\n","\r")
-  
+  data << "\r"
+
   begin
+#puts data
     $sav.write(data)
+#puts "wrote it"    
     return $sav.gets("\r").gsub("\r","\n")
   rescue
-    puts "make sure ip request profile is setup properly"
+#puts "savant not connected. waiting"
+    $sav = $savant.accept
+  retry
   end
 end
 
@@ -78,12 +83,7 @@ end
 
 #Thread.abort_on_exception = true
 server = TCPServer.open(12000)
-savant = TCPServer.open(12001)
-
-savSock = Thread.new do
-  $sav = savant.accept
-  sleep(1)
-end
+$savant = TCPServer.open(12001)
 
 loop do
   Thread.start(server.accept) { |rti| connThread(rti) }
