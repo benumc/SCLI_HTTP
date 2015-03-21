@@ -8,6 +8,7 @@ a = RUBY_PLATFORM
 if a.include? "linux"
  $SCLI = "/usr/local/bin/sclibridge "
 end
+$savConn = true
 
 def readFromRemote(rti)
   rType = 'tcp'
@@ -24,19 +25,22 @@ def readFromRemote(rti)
 end
 
 def writeToRequest(data)
-  data.gsub!("servicerequestcommand ","")
-  data.gsub!("\n","\r")
-  data << "\r"
+  d = data.gsub("servicerequestcommand ","")
+  d.gsub!("\n","")
 
   begin
 #puts data
-    $sav.write(data)
+    $sav.write(d)
 #puts "wrote it"    
     return $sav.gets("\r").gsub("\r","\n")
   rescue
-#puts "savant not connected. waiting"
+    $savConn = false
+#puts "savant not connected. fall back to scli"
+th = Thread.new do
     $sav = $savant.accept
-  retry
+    $savConn = true
+end
+    return writeToScli(data)
   end
 end
 
@@ -55,9 +59,10 @@ def connThread(rti)
     #puts data.inspect
     if /(readstate|writestate|servicerequestcommand|servicerequest|userzones|statenames|settrigger)/.match(data)
       #puts $1.inspect
-      if $1 == "servicerequestcommand"
+      if $1 == "servicerequestcommand" && $savConn == true
         r = writeToRequest(data)
       else
+#puts "writing to scli"
         r = writeToScli(data)
         #puts r.inspect
       end
@@ -68,7 +73,8 @@ def connThread(rti)
              "Content-Length: #{r.length}\r\n" +
              "Connection: close\r\n\r\n"+ r
         else
-          rti.write r
+#puts "Replied with #{r.inspect} "
+         rti.write r
         end
       rescue
         puts "connection closed, can't send reply"
