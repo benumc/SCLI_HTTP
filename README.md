@@ -1,5 +1,5 @@
 # SCLI_HTTP
-Network bridge between RTI and Savant.
+Network bridge between 3rd party system and Savant.
 
 Can be run on smart or pro host.
 
