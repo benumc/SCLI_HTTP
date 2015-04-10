@@ -1,3 +1,6 @@
+***Update***
+Added support for 3rd Party Input profiles. Using this profile in the project and setting the IP Address to that of the savant host will greatly increase the performance of service request commands. If included in your project file you should be able to send repeating commands much more quickly.
+
 # SCLI_HTTP
 Network bridge between 3rd party system and Savant.
 
